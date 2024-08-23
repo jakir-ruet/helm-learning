@@ -7,6 +7,13 @@
 #### Introduction
 Helm is a package manager for Kubernetes, which is an open-source platform for automating the `deployment`, `scaling`, and management of `containerized` applications. Helm helps you `define`, `install`, and `upgrade` even the most complex Kubernetes applications. It uses a packaging format called `charts`, which are collections of files that describe a related set of Kubernetes resources.
 
+It simplifies the process of deploying and managing applications on Kubernetes clusters. Helm consists of **two** main components: the `Helm client` and the `Helm server (Tiller)`. The client is used to interact with the server and manage charts, while the server contains all the necessary information about available charts.
+![Helm](/img/helm.png)
+
+**Function of these components **
+- **Client:** The client (CLI), resides in the local workstation.
+- **Server (Tiller):** The server (Tiller), resides in the Kubernetes cluster to execute what’s needed.
+
 #### [Installing Helm](https://helm.sh/docs/intro/install/)
 #### [Cheat Sheet](https://helm.sh/docs/intro/cheatsheet/)
 
@@ -23,12 +30,16 @@ demo-chart/
 │   └── ingress.yaml
 └── charts/
 ```
+**Chart Architecture**
+![Helm](/img/helm-architecture.png)
 
 **Chart Types**
-- Application
-  It is the `default` type and it is the standard chart which can be operated on fully. 
-- Library
-   Its provides utilities or functions for the chart builder.
+- Application: It is the `default` type and it is the standard chart which can be operated on fully. These charts are designed to deploy a specific application or a set of closely related applications.
+  
+  For example: A Helm chart for deploying an `Nginx` web server, a `PostgreSQL` database, or a complete web application stack (e.g., frontend, backend, database).
+- [Library](https://helm.sh/docs/topics/library_charts/): Its provides utilities or functions for the chart builder. These are charts that are not meant to be deployed directly. Instead, they are intended to be used as dependencies by other charts. Library charts provide reusable snippets or helper templates that can be included in other charts.
+  
+  For example: A library chart might provide common configuration templates for `logging`, `monitoring`, or `security` settings that other charts can use.
 
 #### [Chart Hooks](https://helm.sh/docs/topics/charts_hooks/)
 Helm provides a hook mechanism to allow chart developers to intervene at certain points in a release's life cycle. For example, you can use hooks to:
@@ -44,7 +55,7 @@ This section describes a potential workflow for using provenance data effectivel
 Prerequisites:
 - A valid [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) keypair in a binary (not ASCII-armored) format
 - The helm command line tool
-- GnuPG command line tools (optional)
+- [GnuPG](https://gnupg.org/) command line tools (optional)
 - Keybase command line tools (optional)
 
 ## Courtesy of Jakir
