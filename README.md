@@ -10,7 +10,7 @@ Helm is a package manager for Kubernetes, which is an open-source platform for a
 It simplifies the process of deploying and managing applications on Kubernetes clusters. Helm consists of **two** main components: the `Helm client` and the `Helm server (Tiller)`. The client is used to interact with the server and manage charts, while the server contains all the necessary information about available charts.
 ![Helm](/img/helm.png)
 
-**Function of these components **
+**Function of these components**
 - **Client:** The client (CLI), resides in the local workstation.
 - **Server (Tiller):** The server (Tiller), resides in the Kubernetes cluster to execute what’s needed.
 
