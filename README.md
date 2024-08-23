@@ -620,6 +620,27 @@ helm-chart/
     └── init.sql
 ```
 
+#### Before Helm or Without Helm
+- Managing Kubernetes applications requires more manual effort, careful orchestration.
+- Increases the likelihood of errors due to the need for manual configuration, upgrades, and rollbacks. 
+- It offers more granular control for those who prefer managing every aspect directly.
+- **Consistency** is the major issue with hand write YAML or Deployments.
+- All YAML file that we creating of K8s is static. It don't receive any dynamic parameter.
+- Teams rely on Kubernetes YAML files to configure Kubernetes workload.
+- YAML files specify everything needed for deploying containers.
+- Set up a new Kubernetes workload, you need to create a YAML file for that workload.
+- Kubernetes can’t maintain the revision History.
+
+#### After Helm or With Helm
+- Instead of writing separate YAML files for each application manually, user can simply create a Helm chart and let Helm deploy the application to the cluster for you.
+- Helm chart can be customized when deploying it on different Kubernetes clusters.
+- Benefits of HELM
+  - Greatly improved productivity using Single Click Deployment.
+  - Reduced complexity of deployments
+  - More reproducible deployments and results
+  - Ability to leverage Kubernetes with a single CLI command
+  - Easier rolling back to previous versions of an app
+
 ## Courtesy of Jakir
 
 [![LinkedIn][linkedin-shield-jakir]][linkedin-url-jakir]
