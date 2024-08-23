@@ -329,6 +329,209 @@ helm secrets upgrade --install my-release ./my-chart -f encrypted-secrets.yaml
 **NB:**
 These advanced techniques can greatly enhance your use of Helm, providing more control, automation, and security in your Kubernetes environments.
 
+#### [Kubernetes Distribution](https://helm.sh/docs/topics/kubernetes_distros/)
+A Kubernetes distribution is a packaged version of Kubernetes that includes additional tools, services, and sometimes custom features or configurations to simplify or enhance the Kubernetes experience. These distributions are often tailored for specific use cases, environments (on-premises, cloud, hybrid), or organizational needs. Some popular Kubernetes distributions mention below;
+- Amazon Elastic Kubernetes Service (EKS)
+- Google Kubernetes Engine (GKE)
+- Azure Kubernetes Service (AKS)
+- Red Hat OpenShift
+
+#### [Role-based Access Control](https://helm.sh/docs/topics/rbac/)
+Role-Based Access Control (RBAC) in Helm is used to manage permissions for users and applications when interacting with Kubernetes resources via Helm. Since Helm interacts with the Kubernetes API to install, upgrade, and manage applications (Helm charts), RBAC is crucial for controlling who can perform these actions.
+
+##### How RBAC Applies to Helm
+###### Helm Commands and Kubernetes API:
+- Helm commands such as `helm install`, `helm upgrade`, `helm rollback`, and `helm delete` result in API calls to the Kubernetes cluster. These calls need appropriate permissions, which are managed using RBAC.
+- For example, installing a Helm chart typically requires the ability to create various resources like Deployments, Services, and ConfigMaps.
+
+###### Service Accounts and Permissions:
+- Helm typically operates using a service account in the Kubernetes cluster. The permissions of this service account determine what operations Helm can perform.
+- By default, if you do not specify a service account, Helm uses the default service account in the namespace where it is operating. This account's permissions can be modified to restrict or expand what Helm can do.
+
+##### Creating RBAC Resources for Helm
+To properly use Helm with RBAC, you usually need to create a Role or ClusterRole and bind it to a ServiceAccount using a RoleBinding or ClusterRoleBinding.
+- Creating a Service Account: You can create a dedicated service account for Helm in a specific namespace.
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helm-service-account
+  namespace: default
+```
+- Create a Role or ClusterRole: Define a `Role` or `ClusterRole` that specifies the permissions needed by Helm. For instance, if Helm needs to manage resources like Deployments, Pods, and Services.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: helm-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+```
+If you need the role to apply across all namespaces, you would use a `ClusterRole`.
+- Bind the Role to the Service Account: Bind the `Role` or `ClusterRole` to the Helm service account using a `RoleBinding` or `ClusterRoleBinding`.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helm-role-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: helm-service-account
+  namespace: default
+roleRef:
+  kind: Role
+  name: helm-role
+  apiGroup: rbac.authorization.k8s.io
+```
+- Using the Service Account with Helm: When running Helm commands, you can specify the service account to use.
+```bash
+helm install my-release my-chart --namespace default --service-account helm-service-account
+```
+
+###### Common Use Cases for Helm with RBAC
+- Restricted Environments:
+  - In environments with strict security requirements, you might need to limit the permissions of Helm so that it can only operate on specific namespaces or resources.
+- Multi-Tenant Clusters:
+  - In multi-tenant Kubernetes clusters, each tenant might have their own Helm service account with RBAC policies that restrict them to their own namespace.
+- Automation and CI/CD Pipelines:
+  - When using Helm in CI/CD pipelines, you often create a service account with the exact permissions needed to deploy applications, avoiding unnecessary privileges.
+- Namespace Isolation:
+  - Helm can be used in a way that it can only deploy resources within a single namespace, preventing it from affecting resources in other namespaces.
+
+#### [Helm Plugins](https://helm.sh/docs/topics/plugins/)
+Helm plugins are extensions that add new functionality to Helm, allowing users to customize and enhance the Helm toolchain. Plugins can introduce new commands or modify existing behaviors, making Helm more flexible and powerful for specific use cases.
+
+##### Key Concepts of Helm Plugins
+- Installation: Helm plugins can be easily installed from a Git repository, local path, or Helm plugin index.
+- Development: Plugins are typically written in Go, Bash, or any scripting language that can be executed on the command line.
+- Usage: Once installed, a plugin's commands are available directly via the helm command-line interface.
+
+###### Managing Helm Plugins
+| Command                                       | Work                            |
+| :-------------------------------------------- | :------------------------------ |
+| helm plugin list                              | Check list of installed plugins |
+| helm plugin install <URL/>path>               | Plugin install                  |
+| helm plugin update <plugin-name>              | Update plugin                   |
+| helm plugin remove <plugin-name>              | Remove plugin                   |
+| helm plugin show <plugin-name>                | Show plugin                     |
+| helm diff upgrade <release-name> <chart-path> | Compares a Helm release's       |
+
+###### Benefits of Helm Plugins
+- Customization: Extend Helm’s functionality to meet specific project or organizational needs.
+- Automation: Automate repetitive tasks and integrate Helm with other tools and workflows.
+- Community Contributions: Leverage and contribute to the wide range of open-source plugins available in the Helm ecosystem.
+
+#### [Permissions management for SQL storage backend](https://helm.sh/docs/topics/permissions_sql_storage_backend/)
+Managing permissions for an SQL storage backend in the context of Helm typically involves deploying a Helm chart that includes database configurations and ensuring that the appropriate permissions are set up for the database users. Helm can automate the deployment of these configurations across different environments, ensuring consistency and security.
+
+##### Steps for Managing SQL Permissions with Helm
+- Define Database Credentials in `Values File`
+```yaml
+database:
+  name: my_database
+  user: app_user
+  password: secure_password
+  rootPassword: root_secure_password
+roles:
+  - name: read_only
+    permissions:
+      - type: table
+        table: my_table
+        actions: ["SELECT"]
+  - name: admin
+    permissions:
+      - type: database
+        actions: ["ALL"]
+```
+- Create Kubernetes Secrets for Sensitive Data in Helm chart
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+type: Opaque
+data:
+  db-user: {{ .Values.database.user | b64enc }}
+  db-password: {{ .Values.database.password | b64enc }}
+  db-root-password: {{ .Values.database.rootPassword | b64enc }}
+```
+- Deploy Database with Helm (If exist)
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install my-release bitnami/postgresql -f values.yaml
+```
+- Create SQL Scripts to Set Up Roles and Permissions in `init.sql`
+```bash
+CREATE ROLE read_only;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO read_only;
+
+CREATE ROLE admin;
+GRANT ALL PRIVILEGES ON DATABASE {{ .Values.database.name }} TO admin;
+
+CREATE USER {{ .Values.database.user }} WITH ENCRYPTED PASSWORD '{{ .Values.database.password }}';
+GRANT read_only TO {{ .Values.database.user }};
+```
+- Execute SQL Scripts During Deployment in `deployment.yaml`. Use Helm hooks to execute these SQL scripts when the database is deployed or upgraded. Hooks like `post-install` or `post-upgrade` can be utilized.
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-db
+          image: postgres:13
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: db-root-password
+          command: [ "psql" ]
+          args:
+            - "--host=localhost"
+            - "--username=postgres"
+            - "--dbname={{ .Values.database.name }}"
+            - "--file=/scripts/init.sql"
+          volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+              subPath: init.sql
+      volumes:
+        - name: script-volume
+          configMap:
+            name: init-scripts
+      restartPolicy: OnFailure
+```
+- Manage Updates and Rollbacks
+```bash
+helm upgrade my-release bitnami/postgresql -f values.yaml
+```
+- Use Helm Secrets or Helm Secrecy Tools: Consider using Helm plugins like `helm-secrets` to manage sensitive data securely if you need to keep secrets out of source control.
+```bash
+helm-chart/
+├── Chart.yaml
+├── values.yaml
+├── templates/
+│   ├── secret.yaml
+│   ├── deployment.yaml
+│   ├── configmap.yaml
+│   └── job.yaml
+└── scripts/
+    └── init.sql
+```
+
 ## Courtesy of Jakir
 
 [![LinkedIn][linkedin-shield-jakir]][linkedin-url-jakir]
