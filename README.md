@@ -94,7 +94,7 @@ helm install my-release ./my-chart -f values.yaml
 ```bash
 kubectl get pods,svc -n my-namespace
 ```
-1. Continuous Integration/Continuous Deployment (CI/CD): Set up a CI/CD pipeline using tools like Jenkins, GitLab CI, GitHub Actions, or CircleCI to automate the deployment process.
+4. Continuous Integration/Continuous Deployment (CI/CD): Set up a CI/CD pipeline using tools like Jenkins, GitLab CI, GitHub Actions, or CircleCI to automate the deployment process.
 ```yaml
 name: CI/CD Pipeline
 on:
@@ -115,7 +115,7 @@ jobs:
         run: helm upgrade --install my-release ./my-chart -f values.yaml
 ```
 Automate Testing: Use Helm plugins like helm unittest to automate testing of your Helm charts during the CI/CD pipeline.
-1. Monitoring and Logging: Deploy monitoring tools such as Prometheus and Grafana using Helm charts to monitor the health of your application and Kubernetes cluster.
+5. Monitoring and Logging: Deploy monitoring tools such as Prometheus and Grafana using Helm charts to monitor the health of your application and Kubernetes cluster.
 ```bash
 helm install prometheus bitnami/prometheus
 helm install grafana bitnami/grafana
