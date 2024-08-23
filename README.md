@@ -135,6 +135,200 @@ It simplifies the process of deploying and managing applications on Kubernetes c
 **Helm Chart Architecture**
 ![Helm](/img/helm-architecture.png)
 
+#### [Advanced Helm Techniques](https://helm.sh/docs/topics/advanced/)
+Advanced Helm techniques can significantly enhance how you manage Kubernetes applications, providing more flexibility, automation, and robustness in your deployment workflows. Below are some advanced Helm techniques:
+
+1. Subcharts and Global Values
+- Subcharts: Subcharts are Helm charts that are included as dependencies of a parent chart. They allow you to manage complex applications with multiple components. For instance, a parent chart could represent an entire application, while subcharts represent individual microservices.
+- Global Values: In complex charts with multiple subcharts, global values can be used to set values that are shared across all subcharts. This helps in maintaining consistency and reducing redundancy.
+```yaml
+# values.yaml
+global:
+  image:
+    registry: myregistry.com
+
+subchart1:
+  image:
+    name: service1
+    tag: v1.0.0
+
+subchart2:
+  image:
+    name: service2
+    tag: v2.0.0
+```
+
+2. Helmfile
+Helmfile is a tool for managing multiple Helm charts with a declarative approach. It allows you to define and manage Helm releases in a single file, making it easier to handle complex deployments.
+- Use Cases:
+  - Managing multiple environments.
+  - Coordinating the deployment of multiple charts.
+  - Ensuring consistency across multiple clusters.
+```yaml
+# helmfile.yaml
+releases:
+  - name: my-app
+    namespace: default
+    chart: ./charts/my-app
+    values:
+      - values.yaml
+  - name: my-database
+    namespace: database
+    chart: stable/postgresql
+    values:
+      - db-values.yaml
+```
+You can then deploy everything with:
+```bash
+helmfile sync
+```
+
+3. Functions Templating and Pipelines
+Helm templates support advanced functions and pipelines that allow you to manipulate values and strings in sophisticated ways.
+- Common Templating Functions:
+  - `default`: Provides a default value if the original value is empty.
+  - `required`: Ensures a value is provided, otherwise an error is thrown.
+  - `trim`, `quote`, `replace`: String manipulation functions.
+  - `lookup`: Allows you to query the Kubernetes cluster for resources during the rendering process.
+```yaml
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicas | default 1 }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+            - name: ENV
+              value: {{ .Values.environment | quote | default "production" }}
+```
+
+4. Helm Hooks
+Hooks allow you to run specific Kubernetes resources or Helm templates at particular points in a release lifecycle (e.g., before install, after install, before delete).
+- Use Cases:
+  - Running database migrations before deploying an application.
+  - Cleaning up resources after a release is deleted.
+  - Performing custom validation or pre-checks before an installation.
+```yaml
+# templates/job-migrate.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-migrate"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["./migrate.sh"]
+      restartPolicy: OnFailure
+```
+
+5. Helm Test
+Helm allows you to define and run tests for your Helm releases. This can be used to verify that a deployment is functioning as expected.
+- Use Cases:
+  - Post-deployment validation (e.g., ensuring a web service is reachable).
+  - Running smoke tests to verify core functionality.
+Creating Tests: Add templates with the `helm.sh/hook: test` annotation to define what should be tested.
+```yaml
+# templates/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-test-connection"
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ template "my-app.fullname" . }}:8080']
+  restartPolicy: Never
+```
+You can then run the test with:
+```bash
+helm test my-release
+```
+
+6. Helm Chart Linting
+- Linting your Helm charts helps catch common issues, ensuring that your charts follow best practices and are correctly formatted.
+- The `helm lint` command can be used to validate the syntax and structure of your charts before deploying them.
+```bash
+helm lint my-chart/
+```
+
+7. Helm Plugins
+Helm supports plugins, which extend its functionality with custom commands. You can create your own plugins or use those created by the community.
+- Use Cases:
+  - Automating repetitive tasks.
+  - Integrating Helm with other tools.
+  - Extending Helm’s capabilities.
+Installing a Plugin:
+```bash
+helm plugin install https://github.com/databus23/helm-diff
+```
+
+8. OCI Registry for Helm Charts
+Helm v3 supports OCI (Open Container Initiative) registries, allowing you to store Helm charts in container registries like Docker Hub, AWS ECR, or Azure ACR.
+- Use Cases:
+  - Storing charts in a secure, centralized location.
+  - Leveraging existing container registries for chart distribution.
+```bash
+# Push a chart to an OCI registry
+helm chart save ./my-chart oci://myregistry.com/my-repo
+helm chart push oci://myregistry.com/my-repo/my-chart:1.0.0
+# Pull a chart from an OCI registry
+helm chart pull oci://myregistry.com/my-repo/my-chart:1.0.0
+```
+
+9. Continuous Integration/Continuous Deployment (CI/CD) with Helm
+Helm can be integrated into CI/CD pipelines to automate the deployment of applications.
+- Use Cases:
+  - Automatically deploying charts to staging or production environments.
+  - Running Helm tests as part of the pipeline.
+  - Rolling back releases automatically if tests fail.
+Example: Using tools like Jenkins, GitLab CI, or GitHub Actions to deploy charts.
+
+Example GitLab CI configuration:
+```yaml
+deploy:
+  stage: deploy
+  script:
+    - helm upgrade --install my-release ./my-chart
+  environment:
+    name: production
+    url: https://my-app.com
+```
+
+10. Helm Secrets Management
+Managing sensitive information like passwords and API keys is critical in Kubernetes deployments. Helm supports integrating secrets management tools.
+Tools: Helm Secrets, SOPS, Sealed Secrets, or using Kubernetes Secret resources.
+- Use Cases:
+  - Encrypting sensitive values in `values.yaml`.
+  - Storing secrets in a secure backend like AWS KMS, HashiCorp Vault, or Azure Key Vault.
+Example with Helm Secrets:
+```bash
+# Encrypt a values file
+sops -e secrets.yaml > encrypted-secrets.yaml
+# Use the encrypted file in your Helm deployment
+helm secrets upgrade --install my-release ./my-chart -f encrypted-secrets.yaml
+```
+**NB:**
+These advanced techniques can greatly enhance your use of Helm, providing more control, automation, and security in your Kubernetes environments.
+
 ## Courtesy of Jakir
 
 [![LinkedIn][linkedin-shield-jakir]][linkedin-url-jakir]
