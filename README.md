@@ -115,6 +115,7 @@ jobs:
         run: helm upgrade --install my-release ./my-chart -f values.yaml
 ```
 Automate Testing: Use Helm plugins like helm unittest to automate testing of your Helm charts during the CI/CD pipeline.
+
 5. Monitoring and Logging: Deploy monitoring tools such as Prometheus and Grafana using Helm charts to monitor the health of your application and Kubernetes cluster.
 ```bash
 helm install prometheus bitnami/prometheus
@@ -140,6 +141,7 @@ helm rollback my-release 1
 helm upgrade my-release ./my-chart --set replicaCount=5
 ```
 Chart Versioning: Maintain version control over your Helm charts to track changes and ensure consistency across environments.
+
 8. Disaster Recovery
 - Backup and Restore: Use Helm to manage backup and restore processes. For example, schedule database backups and store them securely.
 - High Availability: Deploy applications in a highly available configuration, such as multi-zone or multi-region deployments, using Helm.
