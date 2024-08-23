@@ -12,6 +12,17 @@ Helm is a package manager for Kubernetes, which is an open-source platform for a
 
 #### [Charts](https://helm.sh/docs/topics/charts/)
 Helm uses a packaging format called charts. A chart is a collection of files that describe a related set of Kubernetes resources. A single chart might be used to deploy something simple, like a memcached pod, or something complex, like a full web app stack with HTTP servers, databases, caches, and so on.
+```bash
+demo-chart/
+│
+├── Chart.yaml
+├── values.yaml
+├── templates/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml
+└── charts/
+```
 
 **Chart Types**
 - Application
@@ -21,7 +32,7 @@ Helm uses a packaging format called charts. A chart is a collection of files tha
 
 #### [Chart Hooks](https://helm.sh/docs/topics/charts_hooks/)
 Helm provides a hook mechanism to allow chart developers to intervene at certain points in a release's life cycle. For example, you can use hooks to:
-- Load a ConfigMap or Secret during install before any other charts are loaded.
+- Load a `ConfigMap` or `Secret` during install before any other charts are loaded.
 - Execute a Job to back up a database before installing a new chart, and then execute a second job after the upgrade in order to restore data.
 - Run a Job before deleting a release to gracefully take a service out of rotation before removing it.
 
@@ -31,7 +42,7 @@ Hooks work like regular templates, but they have special annotations that cause 
 This section describes a potential workflow for using provenance data effectively.
 
 Prerequisites:
-- A valid PGP keypair in a binary (not ASCII-armored) format
+- A valid [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) keypair in a binary (not ASCII-armored) format
 - The helm command line tool
 - GnuPG command line tools (optional)
 - Keybase command line tools (optional)
