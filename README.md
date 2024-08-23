@@ -432,7 +432,7 @@ Helm plugins are extensions that add new functionality to Helm, allowing users t
 Managing permissions for an SQL storage backend in the context of Helm typically involves deploying a Helm chart that includes database configurations and ensuring that the appropriate permissions are set up for the database users. Helm can automate the deployment of these configurations across different environments, ensuring consistency and security.
 
 ##### Steps for Managing SQL Permissions with Helm
-- Define Database Credentials in `Values File`
+- Define Database Credentials in `values.yaml`
 ```yaml
 database:
   name: my_database
@@ -450,7 +450,7 @@ roles:
       - type: database
         actions: ["ALL"]
 ```
-- Create Kubernetes Secrets for Sensitive Data in Helm chart
+- Create Kubernetes Secrets for Sensitive Data in `chart-yaml`
 ```yaml
 apiVersion: v1
 kind: Secret
